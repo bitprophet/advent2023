@@ -5,12 +5,9 @@ fn part1() -> usize {
     let file = fs::read_to_string("inputs/day1.txt").unwrap();
     let parsed: Vec<_> = file
         .lines()
-        .map(|x| {
-            let digits: Vec<_> = x.chars().filter(|x| x.is_ascii_digit()).collect();
-            (x, digits)
-        })
+        .map(|x| x.chars().filter(|x| x.is_ascii_digit()).collect::<Vec<_>>())
         .collect();
-    for (_string, digits) in parsed {
+    for digits in parsed {
         let firstlast: String = [digits.first().unwrap(), digits.last().unwrap()]
             .into_iter()
             .collect();
@@ -61,14 +58,11 @@ fn digits2number(digits: Vec<&str>) -> usize {
 fn part2() -> usize {
     let file = fs::read_to_string("inputs/day1.txt").unwrap();
     let parsed: Vec<_> = file.lines().map(|x| (x, line2digits(x))).collect();
-    assert_eq!(parsed.len(), 1000);
     let mut numbers = Vec::<usize>::new();
     for (_string, digits) in parsed {
         let number = digits2number(digits);
         numbers.push(number);
     }
-    assert_eq!(numbers.len(), 1000);
-    println!("{:?}", numbers);
     numbers.iter().sum()
 }
 
