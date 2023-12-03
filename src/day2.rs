@@ -112,6 +112,33 @@ fn bored_elf(input: &str) -> usize {
     tally
 }
 
+#[aoc(day2, part2)]
+fn dry_elf(input: &str) -> usize {
+    let games = generate_games(input);
+    let mut powersum = 0;
+    for game in games {
+        // As with part 1, can use a pull as a 'bag'
+        let mut maxima = Pull {
+            red: 0,
+            green: 0,
+            blue: 0,
+        };
+        for pull in game.pulls {
+            if pull.red > maxima.red {
+                maxima.red = pull.red;
+            }
+            if pull.green > maxima.green {
+                maxima.green = pull.green;
+            }
+            if pull.blue > maxima.blue {
+                maxima.blue = pull.blue;
+            }
+        }
+        powersum += maxima.red * maxima.green * maxima.blue;
+    }
+    powersum
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -168,16 +195,13 @@ mod tests {
 
     #[test]
     fn description_sample() {
-        assert_eq!(
-            bored_elf(
-                "Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
+        let sample = "Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
 Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
 Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
 Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
-Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green"
-            ),
-            8
-        )
+Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green";
+        assert_eq!(bored_elf(sample), 8);
+        assert_eq!(dry_elf(sample), 2286);
     }
 
     #[test]
