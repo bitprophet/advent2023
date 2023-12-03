@@ -1,9 +1,11 @@
-use std::fs;
+// TODO: still cannot get generators to work whatsoever, always yells at me
+// that "expected <input type>, found &_".
+use aoc_runner_derive::aoc;
 
-fn part1() -> usize {
+#[aoc(day1, part1)]
+fn solve_day1_part1(input: &str) -> usize {
     let mut tally = 0;
-    let file = fs::read_to_string("inputs/day1.txt").unwrap();
-    let parsed: Vec<_> = file
+    let parsed: Vec<_> = input
         .lines()
         .map(|x| x.chars().filter(|x| x.is_ascii_digit()).collect::<Vec<_>>())
         .collect();
@@ -55,20 +57,15 @@ fn digits2number(digits: Vec<&str>) -> usize {
     firstlast.parse::<usize>().unwrap()
 }
 
-fn part2() -> usize {
-    let file = fs::read_to_string("inputs/day1.txt").unwrap();
-    let parsed: Vec<_> = file.lines().map(|x| (x, line2digits(x))).collect();
+#[aoc(day1, part2)]
+fn part2(input: &str) -> usize {
+    let parsed: Vec<_> = input.lines().map(|x| (x, line2digits(x))).collect();
     let mut numbers = Vec::<usize>::new();
     for (_string, digits) in parsed {
         let number = digits2number(digits);
         numbers.push(number);
     }
     numbers.iter().sum()
-}
-
-pub fn go() {
-    part1();
-    println!("{:?}", part2());
 }
 
 #[cfg(test)]
