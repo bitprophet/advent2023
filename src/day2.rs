@@ -9,6 +9,12 @@ struct Pull {
     blue: usize,
 }
 
+impl Pull {
+    fn fits_inside(&self, bag: &Self) -> bool {
+        self.red <= bag.red && self.green <= bag.green && self.blue <= bag.blue
+    }
+}
+
 #[derive(Debug, PartialEq)]
 struct Game {
     id: usize,
@@ -78,6 +84,8 @@ fn bored_elf(input: &str) -> usize {
     };
     let games = generate_games(input);
     let mut tally = 0;
+    let mut possible: Vec<Game> = vec![];
+    let mut impossible: Vec<Game> = vec![];
     for game in games {
         // Checks: totally empty games or pulls (not that this SHOULD be fatal
         // but)
@@ -89,10 +97,18 @@ fn bored_elf(input: &str) -> usize {
         {
             println!("{:?}", game);
         }
-        if game.pulls.iter().all(|x| x <= &bag) {
+        if game.pulls.iter().all(|x| x.fits_inside(&bag)) {
             tally += game.id;
+            possible.push(game);
+        } else {
+            impossible.push(game);
         }
     }
+    println!(
+        "possible games: {:?}, impossible: {:?}",
+        possible.len(),
+        impossible.len()
+    );
     tally
 }
 
@@ -151,55 +167,6 @@ mod tests {
     }
 
     #[test]
-    fn pull_comparisons() {
-        assert_eq!(
-            Pull {
-                red: 1,
-                green: 2,
-                blue: 3
-            },
-            Pull {
-                red: 1,
-                green: 2,
-                blue: 3
-            }
-        );
-        assert!(
-            Pull {
-                red: 1,
-                green: 2,
-                blue: 3
-            } > Pull {
-                red: 1,
-                green: 2,
-                blue: 0
-            }
-        );
-        assert!(
-            Pull {
-                red: 0,
-                green: 0,
-                blue: 1
-            } > Pull {
-                red: 0,
-                green: 0,
-                blue: 0
-            }
-        );
-        assert!(
-            Pull {
-                red: 0,
-                green: 1,
-                blue: 2
-            } < Pull {
-                red: 0,
-                green: 1,
-                blue: 3
-            }
-        )
-    }
-
-    #[test]
     fn description_sample() {
         assert_eq!(
             bored_elf(
@@ -211,5 +178,38 @@ Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green"
             ),
             8
         )
+    }
+
+    #[test]
+    fn fits_inside() {
+        let bag = Pull {
+            red: 1,
+            green: 1,
+            blue: 1,
+        };
+        assert!(Pull {
+            red: 1,
+            green: 1,
+            blue: 1
+        }
+        .fits_inside(&bag));
+        assert!(Pull {
+            red: 0,
+            green: 0,
+            blue: 0
+        }
+        .fits_inside(&bag));
+        assert!(!Pull {
+            red: 1,
+            green: 1,
+            blue: 2
+        }
+        .fits_inside(&bag));
+        assert!(!Pull {
+            red: 11,
+            green: 111,
+            blue: 0
+        }
+        .fits_inside(&bag));
     }
 }
