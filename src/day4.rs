@@ -2,8 +2,7 @@ use std::collections::HashSet;
 
 use aoc_runner_derive::aoc;
 
-#[aoc(day4, part1)]
-fn winning(input: &str) -> usize {
+fn get_scores(input: &str) -> Vec<usize> {
     input
         .lines()
         .map(|line| {
@@ -19,7 +18,18 @@ fn winning(input: &str) -> usize {
                 n => 2usize.pow((n - 1).try_into().unwrap()),
             }
         })
-        .sum()
+        .collect()
+}
+
+#[aoc(day4, part1)]
+fn winning(input: &str) -> usize {
+    get_scores(input).iter().sum()
+}
+
+#[aoc(day4, part2)]
+fn piles(input: &str) -> usize {
+    let table = get_scores(input);
+    table.len() // wrong
 }
 
 #[cfg(test)]
@@ -38,5 +48,6 @@ Card 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11
 "
         .trim();
         assert_eq!(winning(sample), 13);
+        assert_eq!(piles(sample), 30);
     }
 }
