@@ -31,7 +31,7 @@ struct Schematic {
 }
 
 impl Schematic {
-    fn show(&self) -> String {
+    fn _show(&self) -> String {
         let mut output = String::new();
         for row in &self.rows {
             for cell in row {
@@ -83,7 +83,7 @@ impl Schematic {
                 }
             }
             // top center
-            for i in start.x..=right {
+            for i in start.x..right {
                 let point = Point { y: top, x: i };
                 if self.is_part(&point) {
                     adjacent_parts.push(point);
@@ -136,7 +136,7 @@ impl Schematic {
                 }
             }
             // bottom center
-            for i in start.x..=right {
+            for i in start.x..right {
                 let point = Point { y: bottom, x: i };
                 if self.is_part(&point) {
                     adjacent_parts.push(point);
@@ -205,7 +205,6 @@ impl From<&str> for Schematic {
 #[aoc(day3, part1)]
 fn schemattic(input: &str) -> usize {
     let schematic = Schematic::from(input);
-    dbg!(schematic.show());
     schematic.sum_part_numbers()
 }
 
