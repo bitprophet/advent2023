@@ -27,6 +27,16 @@ struct Number {
     chars: Vec<char>,
 }
 
+impl Number {
+    fn as_int(&self) -> usize {
+        self.chars
+            .iter()
+            .collect::<String>()
+            .parse::<usize>()
+            .unwrap()
+    }
+}
+
 type GearMap = HashMap<Point, Vec<Number>>;
 
 #[derive(Debug)]
@@ -161,12 +171,7 @@ impl Schematic {
                     active = false;
                     // And was that number seemingly adjacent to any 'parts'?
                     if self.number_is_label(&cur) {
-                        sum += cur
-                            .chars
-                            .iter()
-                            .collect::<String>()
-                            .parse::<usize>()
-                            .unwrap();
+                        sum += cur.as_int();
                     }
                 }
             }
@@ -195,18 +200,27 @@ impl From<&str> for Schematic {
 #[aoc(day3, part1)]
 fn schemattic(input: &str) -> usize {
     let mut schematic = Schematic::from(input);
-    let result = schematic.sum_part_numbers();
-    dbg!(schematic.get_gears());
-    result
+    schematic.sum_part_numbers()
 }
 
-/*
 #[aoc(day3, part2)]
 fn ratioed(input: &str) -> usize {
-    let schematic = Schematic::from(input);
-    input.len()
+    let mut schematic = Schematic::from(input);
+    schematic.sum_part_numbers(); // for side effect. lmfao
+    schematic
+        .get_gears()
+        .values()
+        .map(|numbers| {
+            assert_eq!(numbers.len(), 2);
+            let first = numbers[0].as_int();
+            let second = numbers[1].as_int();
+            dbg!(first, second);
+            let ratio = first * second;
+            dbg!(ratio);
+            ratio
+        })
+        .sum()
 }
-*/
 
 #[cfg(test)]
 mod tests {
@@ -277,7 +291,6 @@ mod tests {
 "
         .trim();
         assert_eq!(schemattic(sample), 4361);
-        assert!(false);
-        //        assert_eq!(ratioed(sample), 536576);
+        assert_eq!(ratioed(sample), 467835);
     }
 }
