@@ -31,10 +31,6 @@ struct Schematic {
 }
 
 impl Schematic {
-    fn size(&self) -> usize {
-        self.rows.len() * self.rows.iter().max_by_key(|x| x.len()).unwrap().len()
-    }
-
     fn show(&self) -> String {
         let mut output = String::new();
         for row in &self.rows {
@@ -50,9 +46,104 @@ impl Schematic {
         self.rows[y][x]
     }
 
-    fn number_is_label(&self, number: &Number) -> bool {
-        // TODO: replaceme
-        number.chars.is_empty()
+    fn is_part(&self, point: &Point) -> bool {
+        let cell = self.get(point.y, point.x);
+        cell != '.' && !DIGITS.contains(&cell)
+    }
+
+    fn number_is_label(&self, num: &Number) -> bool {
+        let start = &num.start;
+        // Not strictly necessary but feels clean, might help with part 2?
+        let mut adjacent_parts: Vec<Point> = Vec::new();
+        // bounds
+        let right = start.x + num.chars.len();
+        let bottom = start.y + 1;
+        // Look above the number (including corners).
+        // (but not on 1st row...)
+        if start.y > 0 {
+            let top = start.y - 1;
+            let row = &self.rows[top];
+            // TODO: simplify by just getting the appropriate slice of the row
+            // and iterating it
+            // top-left corner
+            if start.x >= 1 {
+                let point = Point {
+                    y: top,
+                    x: start.x - 1,
+                };
+                if self.is_part(&point) {
+                    adjacent_parts.push(point);
+                }
+            }
+            // top-right corner
+            if right <= (row.len() - 1) {
+                let point = Point { y: top, x: right };
+                if self.is_part(&point) {
+                    adjacent_parts.push(point);
+                }
+            }
+            // top center
+            for i in start.x..=right {
+                let point = Point { y: top, x: i };
+                if self.is_part(&point) {
+                    adjacent_parts.push(point);
+                }
+            }
+        }
+        // Look left of the number.
+        if start.x > 0 {
+            let point = Point {
+                y: start.y,
+                x: start.x - 1,
+            };
+            if self.is_part(&point) {
+                adjacent_parts.push(point);
+            }
+        }
+        // Look right of the number.
+        if right < self.rows[start.y].len() {
+            let point = Point {
+                y: start.y,
+                x: right,
+            };
+            if self.is_part(&point) {
+                adjacent_parts.push(point);
+            }
+        }
+        // Look below the number (including corners).
+        // (but not on last row...)
+        if bottom < self.rows.len() {
+            // TODO: iterate slice of row instead of all this
+            let row = &self.rows[bottom];
+            // bottom-left corner
+            if start.x >= 1 {
+                let point = Point {
+                    y: bottom,
+                    x: start.x - 1,
+                };
+                if self.is_part(&point) {
+                    adjacent_parts.push(point);
+                }
+            }
+            // bottom-right corner
+            if right <= (row.len() - 1) {
+                let point = Point {
+                    y: bottom,
+                    x: right,
+                };
+                if self.is_part(&point) {
+                    adjacent_parts.push(point);
+                }
+            }
+            // bottom center
+            for i in start.x..=right {
+                let point = Point { y: bottom, x: i };
+                if self.is_part(&point) {
+                    adjacent_parts.push(point);
+                }
+            }
+        }
+        !adjacent_parts.is_empty()
     }
 
     fn sum_part_numbers(&self) -> usize {
@@ -143,6 +234,32 @@ mod tests {
         assert_eq!(s.rows[0].len(), 10);
         assert_eq!(s.rows[0][2], '7');
         assert_eq!(s.get(0, 2), '7');
+    }
+
+    #[test]
+    fn scanning() {
+        let sample = "
+467..114..
+...*......
+..35..633.
+......#...
+617*......
+.....+.58.
+..592.....
+......755.
+...$.*....
+.664.598..
+"
+        .trim();
+        let s = Schematic::from(sample);
+        assert!(s.number_is_label(&Number {
+            start: Point { y: 0, x: 0 },
+            chars: vec!['4', '6', '7']
+        }));
+        assert!(!s.number_is_label(&Number {
+            start: Point { y: 0, x: 5 },
+            chars: vec!['1', '1', '4']
+        }));
     }
 
     #[test]
