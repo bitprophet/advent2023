@@ -27,10 +27,12 @@ struct Number {
     chars: Vec<char>,
 }
 
+type GearMap = HashMap<Point, Vec<Number>>;
+
 #[derive(Debug)]
 struct Schematic {
     rows: Vec<Row>,
-    gears: HashMap<Point, Vec<Number>>,
+    gears: GearMap,
 }
 
 impl Schematic {
@@ -171,6 +173,11 @@ impl Schematic {
         }
         sum
     }
+
+    fn get_gears(&mut self) -> GearMap {
+        self.gears.retain(|_, numbers| numbers.len() == 2);
+        self.gears.clone()
+    }
 }
 
 impl From<&str> for Schematic {
@@ -180,7 +187,7 @@ impl From<&str> for Schematic {
                 .lines()
                 .map(|line| Row::from(line.chars().collect::<Vec<_>>()))
                 .collect(),
-            gears: HashMap::<Point, Vec<Number>>::new(),
+            gears: GearMap::new(),
         }
     }
 }
@@ -189,7 +196,7 @@ impl From<&str> for Schematic {
 fn schemattic(input: &str) -> usize {
     let mut schematic = Schematic::from(input);
     let result = schematic.sum_part_numbers();
-    dbg!(schematic.gears);
+    dbg!(schematic.get_gears());
     result
 }
 
