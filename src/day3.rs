@@ -63,27 +63,9 @@ impl Schematic {
         if start.y > 0 {
             let top = start.y - 1;
             let row = &self.rows[top];
-            // TODO: simplify by just getting the appropriate slice of the row
-            // and iterating it
-            // top-left corner
-            if start.x >= 1 {
-                let point = Point {
-                    y: top,
-                    x: start.x - 1,
-                };
-                if self.is_part(&point) {
-                    adjacent_parts.push(point);
-                }
-            }
-            // top-right corner
-            if right <= (row.len() - 1) {
-                let point = Point { y: top, x: right };
-                if self.is_part(&point) {
-                    adjacent_parts.push(point);
-                }
-            }
-            // top center
-            for i in start.x..right {
+            let scan_start = if start.x >= 1 { start.x - 1 } else { start.x };
+            let scan_end = if right < row.len() { right } else { right - 1 };
+            for i in scan_start..=scan_end {
                 let point = Point { y: top, x: i };
                 if self.is_part(&point) {
                     adjacent_parts.push(point);
@@ -113,30 +95,10 @@ impl Schematic {
         // Look below the number (including corners).
         // (but not on last row...)
         if bottom < self.rows.len() {
-            // TODO: iterate slice of row instead of all this
             let row = &self.rows[bottom];
-            // bottom-left corner
-            if start.x >= 1 {
-                let point = Point {
-                    y: bottom,
-                    x: start.x - 1,
-                };
-                if self.is_part(&point) {
-                    adjacent_parts.push(point);
-                }
-            }
-            // bottom-right corner
-            if right <= (row.len() - 1) {
-                let point = Point {
-                    y: bottom,
-                    x: right,
-                };
-                if self.is_part(&point) {
-                    adjacent_parts.push(point);
-                }
-            }
-            // bottom center
-            for i in start.x..right {
+            let scan_start = if start.x >= 1 { start.x - 1 } else { start.x };
+            let scan_end = if right < row.len() { right } else { right - 1 };
+            for i in scan_start..=scan_end {
                 let point = Point { y: bottom, x: i };
                 if self.is_part(&point) {
                     adjacent_parts.push(point);
@@ -208,6 +170,14 @@ fn schemattic(input: &str) -> usize {
     schematic.sum_part_numbers()
 }
 
+/*
+#[aoc(day3, part2)]
+fn ratioed(input: &str) -> usize {
+    let schematic = Schematic::from(input);
+    input.len()
+}
+*/
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -277,5 +247,6 @@ mod tests {
 "
         .trim();
         assert_eq!(schemattic(sample), 4361);
+        //        assert_eq!(ratioed(sample), 536576);
     }
 }
