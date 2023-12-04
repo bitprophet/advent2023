@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use aoc_runner_derive::aoc;
 
 // TODO: gotta be something more compact lol
@@ -13,13 +15,13 @@ const DIGITS: [char; 10] = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
 type Row = Vec<char>;
 type Cell = char;
 
-#[derive(Debug)]
+#[derive(Debug, Eq, Hash, PartialEq, Clone)]
 struct Point {
     y: usize,
     x: usize,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Number {
     start: Point,
     chars: Vec<char>,
@@ -28,6 +30,7 @@ struct Number {
 #[derive(Debug)]
 struct Schematic {
     rows: Vec<Row>,
+    gears: HashMap<Point, Vec<Number>>,
 }
 
 impl Schematic {
@@ -51,9 +54,9 @@ impl Schematic {
         cell != '.' && !DIGITS.contains(&cell)
     }
 
-    fn number_is_label(&self, num: &Number) -> bool {
+    fn number_is_label(&mut self, num: &Number) -> bool {
         let start = &num.start;
-        // Not strictly necessary but feels clean, might help with part 2?
+        // Not strictly necessary but feels cleanish
         let mut adjacent_parts: Vec<Point> = Vec::new();
         // bounds
         let right = start.x + num.chars.len();
@@ -105,10 +108,27 @@ impl Schematic {
                 }
             }
         }
-        !adjacent_parts.is_empty()
+        // For part 1 - return equiv of !adjacent_parts.is_empty()
+        if adjacent_parts.is_empty() {
+            false
+        } else {
+            // For part 2: as side effect, update schematic's map of gears if
+            // any were found, so they are associated with this number in
+            // reverse.
+            for point in adjacent_parts {
+                if self.get(point.y, point.x) == '*' {
+                    self.gears
+                        .entry(point)
+                        .and_modify(|v| v.push(num.clone()))
+                        .or_insert(vec![num.clone()]);
+                }
+            }
+            // Then part 1 again.
+            true
+        }
     }
 
-    fn sum_part_numbers(&self) -> usize {
+    fn sum_part_numbers(&mut self) -> usize {
         let mut sum = 0;
         // TODO: feels like this 'wants' to be an Option<Number> but I'm not
         // clear on how to modify the internal value w/o a lot of vexing
@@ -119,7 +139,7 @@ impl Schematic {
             chars: Vec::new(),
         };
         let mut active = false;
-        for (y, row) in self.rows.iter().enumerate() {
+        for (y, row) in self.rows.to_vec().iter().enumerate() {
             for (x, cell) in row.iter().enumerate() {
                 // Numberriffic
                 if DIGITS.contains(cell) {
@@ -160,14 +180,17 @@ impl From<&str> for Schematic {
                 .lines()
                 .map(|line| Row::from(line.chars().collect::<Vec<_>>()))
                 .collect(),
+            gears: HashMap::<Point, Vec<Number>>::new(),
         }
     }
 }
 
 #[aoc(day3, part1)]
 fn schemattic(input: &str) -> usize {
-    let schematic = Schematic::from(input);
-    schematic.sum_part_numbers()
+    let mut schematic = Schematic::from(input);
+    let result = schematic.sum_part_numbers();
+    dbg!(schematic.gears);
+    result
 }
 
 /*
@@ -220,7 +243,7 @@ mod tests {
 .664.598..
 "
         .trim();
-        let s = Schematic::from(sample);
+        let mut s = Schematic::from(sample);
         assert!(s.number_is_label(&Number {
             start: Point { y: 0, x: 0 },
             chars: vec!['4', '6', '7']
@@ -247,6 +270,7 @@ mod tests {
 "
         .trim();
         assert_eq!(schemattic(sample), 4361);
+        assert!(false);
         //        assert_eq!(ratioed(sample), 536576);
     }
 }
