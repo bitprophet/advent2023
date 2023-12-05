@@ -53,27 +53,26 @@ fn winning(input: &str) -> usize {
 }
 
 fn count_winnings(table: Scores, mut winnings: Winnings) -> usize {
-    // Short-circuit if at end of recursion
-    if winnings.is_empty() {
-        return 0;
-    }
-    // Iterate: 'take' a 'card'
-    winnings[0].count -= 1;
-    // Distribute new copies of cards based on current card's score
-    let score = table[winnings[0].index];
-    for delta in 0..score {
-        let copy_index = delta + 1;
-        if copy_index <= winnings.len() {
-            winnings[copy_index].count += 1;
+    let mut tally = 0;
+    while !winnings.is_empty() {
+        // Iterate: 'take' a 'card'
+        winnings[0].count -= 1;
+        // Distribute new copies of cards based on current card's score
+        let score = table[winnings[0].index];
+        for delta in 0..score {
+            let copy_index = delta + 1;
+            if copy_index <= winnings.len() {
+                winnings[copy_index].count += 1;
+            }
         }
+        // If we took the last copy of the current card number, pop it off and move
+        // onwards (otherwise, we'll loop to the next copy of current card)
+        if winnings[0].count == 0 {
+            winnings.pop_front();
+        }
+        tally += 1;
     }
-    // If we took the last copy of the current card number, pop it off and move
-    // onwards (otherwise, we'll loop to the next copy of current card)
-    if winnings[0].count == 0 {
-        winnings.pop_front();
-    }
-    // Recurse: tally of rest of pile, + the 1 for this card
-    count_winnings(table, winnings) + 1
+    tally
 }
 
 #[aoc(day4, part2)]
@@ -87,8 +86,6 @@ fn piles(input: &str) -> usize {
         .enumerate()
         .map(|(i, _)| CardCopies { index: i, count: 1 })
         .collect();
-    dbg!(&winnings);
-    // Recurse
     count_winnings(table, winnings)
 }
 
