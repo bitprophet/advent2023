@@ -4,6 +4,7 @@ use aoc_runner_derive::aoc;
 
 type Scores = Vec<usize>;
 
+#[derive(Debug)]
 struct CardCopies {
     index: usize,
     count: usize,
@@ -30,6 +31,22 @@ fn get_scores(input: &str) -> Scores {
         .collect()
 }
 
+fn count_winning_numbers(input: &str) -> Scores {
+    input
+        .lines()
+        .map(|line| {
+            let mut parts = line.split(':').nth(1).unwrap().split('|').map(|x| {
+                x.split_whitespace()
+                    .map(|y| y.parse().unwrap())
+                    .collect::<HashSet<usize>>()
+            });
+            // My kingdom for a combo of split_whitespace and split_once...
+            let (winners, numbers) = (parts.next().unwrap(), parts.next().unwrap());
+            winners.intersection(&numbers).count()
+        })
+        .collect()
+}
+
 #[aoc(day4, part1)]
 fn winning(input: &str) -> usize {
     get_scores(input).iter().sum()
@@ -40,20 +57,20 @@ fn count_winnings(table: Scores, mut winnings: Winnings) -> usize {
     if winnings.is_empty() {
         return 0;
     }
-    // Iterate: 'take' a 'card', possibly removing that entry entirely if no
-    // more copies are left.
-    let card = &mut winnings[0];
-    let index = card.index;
-    card.count -= 1;
-    if card.count == 0 {
-        winnings.pop_front();
-    }
+    // Iterate: 'take' a 'card'
+    winnings[0].count -= 1;
     // Distribute new copies of cards based on current card's score
-    for delta in 0..=table[index] {
+    let score = table[winnings[0].index];
+    for delta in 0..score {
         let copy_index = delta + 1;
         if copy_index <= winnings.len() {
-            winnings[index].count += 1;
+            winnings[copy_index].count += 1;
         }
+    }
+    // If we took the last copy of the current card number, pop it off and move
+    // onwards (otherwise, we'll loop to the next copy of current card)
+    if winnings[0].count == 0 {
+        winnings.pop_front();
     }
     // Recurse: tally of rest of pile, + the 1 for this card
     count_winnings(table, winnings) + 1
@@ -62,7 +79,7 @@ fn count_winnings(table: Scores, mut winnings: Winnings) -> usize {
 #[aoc(day4, part2)]
 fn piles(input: &str) -> usize {
     // Immutable map of card number (well, -1) to score
-    let table = get_scores(input);
+    let table = count_winning_numbers(input);
     // Mutable map of card number to _number of copies of that card_,
     // which ofc starts with 1.
     let winnings: Winnings = table
@@ -70,6 +87,7 @@ fn piles(input: &str) -> usize {
         .enumerate()
         .map(|(i, _)| CardCopies { index: i, count: 1 })
         .collect();
+    dbg!(&winnings);
     // Recurse
     count_winnings(table, winnings)
 }
