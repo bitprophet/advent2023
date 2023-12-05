@@ -1,8 +1,17 @@
-use std::collections::HashSet;
+use std::collections::{HashSet, VecDeque};
 
 use aoc_runner_derive::aoc;
 
-fn get_scores(input: &str) -> Vec<usize> {
+type Scores = Vec<usize>;
+
+struct CardCopies {
+    index: usize,
+    count: usize,
+}
+
+type Winnings = VecDeque<CardCopies>;
+
+fn get_scores(input: &str) -> Scores {
     input
         .lines()
         .map(|line| {
@@ -26,10 +35,43 @@ fn winning(input: &str) -> usize {
     get_scores(input).iter().sum()
 }
 
+fn count_winnings(table: Scores, mut winnings: Winnings) -> usize {
+    // Short-circuit if at end of recursion
+    if winnings.is_empty() {
+        return 0;
+    }
+    // Iterate: 'take' a 'card', possibly removing that entry entirely if no
+    // more copies are left.
+    let card = &mut winnings[0];
+    let index = card.index;
+    card.count -= 1;
+    if card.count == 0 {
+        winnings.pop_front();
+    }
+    // Distribute new copies of cards based on current card's score
+    for delta in 0..=table[index] {
+        let copy_index = delta + 1;
+        if copy_index <= winnings.len() {
+            winnings[index].count += 1;
+        }
+    }
+    // Recurse: tally of rest of pile, + the 1 for this card
+    count_winnings(table, winnings) + 1
+}
+
 #[aoc(day4, part2)]
 fn piles(input: &str) -> usize {
+    // Immutable map of card number (well, -1) to score
     let table = get_scores(input);
-    table.len() // wrong
+    // Mutable map of card number to _number of copies of that card_,
+    // which ofc starts with 1.
+    let winnings: Winnings = table
+        .iter()
+        .enumerate()
+        .map(|(i, _)| CardCopies { index: i, count: 1 })
+        .collect();
+    // Recurse
+    count_winnings(table, winnings)
 }
 
 #[cfg(test)]
